@@ -9,8 +9,8 @@ class ICM_A2C_agent():
         self.a2c = A2C_Model(action_dim)
         self.icm = ICM(action_dim)
         
-        self.optimizer_icm = optim.Adam(self.a2c.parameters(), lr=0.001)
-        self.optimizer_a2c = optim.Adam(self.icm.parameters(), lr=0.001)
+        self.optimizer_icm = optim.Adam(self.a2c.parameters(), lr=0.0001)
+        self.optimizer_a2c = optim.Adam(self.icm.parameters(), lr=0.0001)
         
         self.gamma = gamma
         self.beta = beta 

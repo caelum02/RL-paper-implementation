@@ -15,23 +15,28 @@ buffer = tool.buffer(20)
 agent = ICM_A2C_agent(12)
 
 for iteration in range(100000):
-    if not iteration % 1000:
+    if not (iteration+1) % 500:
         with torch.no_grad():
             obs = tool.preprocess(env.reset())
             done = False
             ret = 0
+            cnt = 0
             while not done:
-                env.render()
+                if not cnt % 10:
+                    env.render()
                 act = agent.get_action(obs)
                 nxt_obs, r_e, done, info = env.step(act)
-                obs = tool.preprocess(nxt_obs)
-                
+                nxt_obs = tool.preprocess(nxt_obs)
+
+                print(agent.icm(obs, torch.Tensor([act]), nxt_obs)[0])
                 ret += r_e
+
+                cnt += 1
             obs = tool.preprocess(env.reset())
         print(ret)
     
     buffer.reset()
-    for step in range(10):
+    for step in range(20):
         act = agent.get_action(obs)
         nxt_obs, r_e, done, info = env.step(act)
         nxt_obs = tool.preprocess(nxt_obs)
@@ -42,6 +47,7 @@ for iteration in range(100000):
         buffer.obs_feature.append(agent.icm.inverse.get_feature(obs))
         buffer.nxt_obs_feature.append(agent.icm.inverse.get_feature(nxt_obs))
         buffer.rwd.append(r_e)
+        # buffer.rwd.append(0)
 
         obs = nxt_obs
 
