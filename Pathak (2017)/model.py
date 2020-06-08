@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 def Conv_Head():
     return nn.Sequential(
-                    nn.Conv2d(3, 32, 3, stride=2, padding=1),
+                    nn.Conv2d(4, 32, 3, stride=2, padding=1),
                     nn.ELU(),
                     nn.Conv2d(32, 32, 3, stride=2, padding=1),
                     nn.ELU(),
@@ -32,7 +32,7 @@ class Inverse_Model(nn.Module):
         x = F.relu(self.dense1(torch.cat((state, nxt_state), dim=1)))
         x = self.dense2(x)
 
-        return state, nxt_state, Categorical(x)
+        return state, nxt_state, Categorical(logits=x)
     
     def get_feature(self, x):
         return self.feature_extractor(x)

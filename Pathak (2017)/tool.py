@@ -1,6 +1,7 @@
 import torch
 import cv2
 import scipy
+import numpy as np
 
 class buffer():
     def __init__(self, size):
@@ -36,5 +37,10 @@ def discount(x, gamma):
     return torch.stack(discounted_rwds).unsqueeze(1)
 
 def preprocess(obs):
-    normalized = cv2.resize(obs, (42, 42), interpolation=cv2.INTER_AREA) / 256
-    return torch.as_tensor(normalized, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
+    ret = []
+    for img in obs:
+        resized = cv2.resize(img, (42, 42), interpolation=cv2.INTER_AREA)
+        Y = cv2.cvtColor(resized, cv2.COLOR_RGB2YUV)[:,:,0]
+        ret.append(Y / 256) 
+
+    return torch.as_tensor(np.stack(ret, axis=0), dtype=torch.float32).unsqueeze(0)

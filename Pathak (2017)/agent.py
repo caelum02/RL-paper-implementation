@@ -5,7 +5,7 @@ import torch.optim as optim
 import torch
 
 class ICM_A2C_agent():
-    def __init__(self, action_dim, beta=0.2, lamb=0.01, gamma=0.99):
+    def __init__(self, action_dim, beta=0.2, lamb=0.1, gamma=0.99):
         self.a2c = A2C_Model(action_dim)
         self.icm = ICM(action_dim)
         
@@ -19,15 +19,13 @@ class ICM_A2C_agent():
     def train(self, buffers):
         buff = buffers.as_tensor()
 
-        with torch.no_grad():
-            r_i, _ = self.icm(buff['obs'], buff['act'], buff['nxt_obs'])
+        curiosity, act_dist_pred = self.icm(buff['obs'], buff['act'], buff['nxt_obs'])
 
-        buff['rwd'] += r_i
+        buff['rwd'] += curiosity.detach()
 
         self.optimizer_icm.zero_grad()
         self.optimizer_a2c.zero_grad()
 
-        curiosity, act_dist_pred = self.icm.forward(buff['obs'], buff['act'], buff['nxt_obs'])
 
         loss_F = curiosity.mean()
 
@@ -42,7 +40,8 @@ class ICM_A2C_agent():
         loss_actor = -(logp * adv.detach()).mean()
         loss_critic = 0.5 * adv.pow(2).mean()
 
-        loss_a2c = self.lamb * (loss_actor + loss_critic)
+
+        loss_a2c = self.lamb * (loss_actor + loss_critic - 0.02 * act_dist.entropy().mean())
         loss_a2c.backward()
         
         loss_icm = self.beta * loss_F + (1-self.beta) * loss_I
@@ -58,3 +57,11 @@ class ICM_A2C_agent():
         act = policy.sample().item()
 
         return act
+
+    def save(self, path='./model'):
+        torch.save(self.a2c.state_dict(), path+'/a2c.pt')
+        torch.save(self.icm.state_dict(), path+'/icm.pt')
+
+    def load(self, path='./model'):
+        self.a2c.load_state_dict(torch.load(path+'/a2c.pt'))
+        self.icm.load_state_dict(torch.load(path+'/icm.pt'))
