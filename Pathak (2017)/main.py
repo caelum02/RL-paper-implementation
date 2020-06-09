@@ -26,13 +26,15 @@ for iteration in range(100000):
                 env.render()
                 act = agent.get_action(obs)
                 nxt_obs, r_e, done, info = env.step(act)
+                obs = nxt_obs
                 ret += r_e
+                print(info['x_pos'])
 
         obs = env.reset()
-        print(ret)
+        print(ret, info)
     
     buffer.reset()
-    for step in range(20):
+    for step in range(30):
         act = agent.get_action(obs)
         nxt_obs, r_e, done, info = env.step(act)
 
@@ -51,6 +53,7 @@ for iteration in range(100000):
 
     loss_F, loss_I, loss_a2c = agent.train(buffer)
     print(f'epoch : {iteration} \t \
-        L_F : {loss_F} \t \
-        L_I : {loss_F} \t \
-        L_a2c : {loss_a2c}')
+        L_F : {loss_F: 5f} \t \
+        L_I : {loss_I: 5f} \t \
+        L_a2c : {loss_a2c: 5f} \t \
+        rwd : {sum(buffer.rwd) / len(buffer.rwd) : 5f}')

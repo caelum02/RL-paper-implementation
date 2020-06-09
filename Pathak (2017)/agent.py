@@ -5,7 +5,7 @@ import torch.optim as optim
 import torch
 
 class ICM_A2C_agent():
-    def __init__(self, action_dim, beta=0.2, lamb=0.1, gamma=0.99):
+    def __init__(self, action_dim, beta=0.2, lamb=10, gamma=0.99, eta=10):
         self.a2c = A2C_Model(action_dim)
         self.icm = ICM(action_dim)
         
@@ -15,13 +15,14 @@ class ICM_A2C_agent():
         self.gamma = gamma
         self.beta = beta 
         self.lamb = lamb 
+        self.eta = eta
 
     def train(self, buffers):
         buff = buffers.as_tensor()
 
         curiosity, act_dist_pred = self.icm(buff['obs'], buff['act'], buff['nxt_obs'])
 
-        buff['rwd'] += curiosity.detach()
+        buff['rwd'] += self.eta * curiosity.detach()
 
         self.optimizer_icm.zero_grad()
         self.optimizer_a2c.zero_grad()
